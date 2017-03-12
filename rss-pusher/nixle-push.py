@@ -30,7 +30,10 @@ DEVICE_ID = os.environ['DEVICE']
 device = client.device(DEVICE_ID)
 
 # Create a data stream associated with target Device
-stream = device.stream('titles1')# , type="alphanumeric")
+try:
+    stream = device.stream('titles')
+except:
+    stream = device.create_stream('titles', type="alphanumeric")
 
 
 rss_feeds = """
@@ -52,7 +55,7 @@ for entry in rssfeed.entries:
     title = entry.title_detail.value
     timetup = entry.published_parsed
 
-    timetup = time.gmtime(time.mktime(timetup) - 86400)
+    # timetup = time.gmtime(time.mktime(timetup) - 86400)
 
     timestr = toiso(timetup)
 
@@ -60,6 +63,7 @@ for entry in rssfeed.entries:
     stream.add_value(title, timestr)
     print title
     print timestr
+    pp.pprint(entry)
 
 
 
