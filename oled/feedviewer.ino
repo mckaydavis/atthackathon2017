@@ -1,3 +1,4 @@
+#include "M2XStreamClient.h"
 
 /*********************************************************************
 This is an example for our Monochrome OLEDs based on SSD1306 drivers
@@ -8,11 +9,11 @@ This is an example for our Monochrome OLEDs based on SSD1306 drivers
 This example is for a 128x64 size display using SPI to communicate
 4 or 5 pins are required to interface
 
-Adafruit invests time and resources providing this open source code, 
-please support Adafruit and open-source hardware by purchasing 
+Adafruit invests time and resources providing this open source code,
+please support Adafruit and open-source hardware by purchasing
 products from Adafruit!
 
-Written by Limor Fried/Ladyada  for Adafruit Industries.  
+Written by Limor Fried/Ladyada  for Adafruit Industries.
 BSD license, check license.txt for more information
 All text above, and the splash screen must be included in any redistribution
 *********************************************************************/
@@ -43,7 +44,7 @@ Adafruit_SSD1306 display(OLED_DC, OLED_RESET, OLED_CS);
 #define DELTAY 2
 
 
-#define LOGO16_GLCD_HEIGHT 16 
+#define LOGO16_GLCD_HEIGHT 16
 #define LOGO16_GLCD_WIDTH  16
 
 static const unsigned char logo16_glcd_bmp[] =
@@ -68,16 +69,195 @@ static const unsigned char logo16_glcd_bmp[] =
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
 #endif
 
-void setup()   {                
+
+
+#include "M2XStreamClient.h"
+
+char deviceId[] = "c6f89134f777160aa3acf90b5e978c15";
+char streamName[] = "titles";  // Stream you want to post to
+char m2xKey[] = "5b1ff72015527f77ec9e1b6226a2ba11";
+
+const int temperaturePin = 0;
+TCPClient client;
+M2XStreamClient m2xClient(&client, m2xKey);
+
+float getVoltage(int pin) {
+  return (analogRead(temperaturePin) * 3.3) / 4095;
+}
+
+/*
+void setup() {
+  pinMode(temperaturePin, INPUT);
+
   Serial.begin(9600);
-  
+
+  while (!WiFi.ready()) {
+    Serial.println("Waiting for WIFI connection...");
+    // wait 2 seconds for connection
+    delay(10000);
+  }
+  Serial.println("Connected to wifi");
+}
+
+void loop() {
+  float voltage, degreesC, degreesF;
+
+  voltage = getVoltage(temperaturePin);
+  degreesC = (voltage - 0.5) * 100.0;
+  degreesF = degreesC * (9.0/5.0) + 32.0;
+
+  Serial.print("voltage: ");
+  Serial.print(voltage);
+  Serial.print("  deg C: ");
+  Serial.print(degreesC);
+  Serial.print("  deg F: ");
+  Serial.println(degreesF);
+
+  int response = m2xClient.updateStreamValue(deviceId, streamName, degreesC);
+  Serial.print("M2x client response code: ");
+  Serial.println(response);
+
+  if (response == -1) while(1) ;
+
+  delay(5000);
+}
+*/
+
+void led_red() {
+  pinMode(D0, OUTPUT);
+  pinMode(D1, OUTPUT);
+  pinMode(D2, OUTPUT);
+  digitalWrite(D0, HIGH);
+  digitalWrite(D1, LOW);
+  digitalWrite(D2, LOW);
+}
+
+
+void led_yellow() {
+  pinMode(D0, OUTPUT);
+  pinMode(D1, OUTPUT);
+  pinMode(D2, OUTPUT);
+  digitalWrite(D1, HIGH);
+  digitalWrite(D0, LOW);
+  digitalWrite(D2, LOW);
+}
+
+void led_green() {
+  pinMode(D0, OUTPUT);
+  pinMode(D1, OUTPUT);
+  pinMode(D2, OUTPUT);
+  digitalWrite(D2, HIGH);
+  digitalWrite(D1, LOW);
+  digitalWrite(D2, LOW);
+}
+
+void led_none() {
+  pinMode(D0, OUTPUT);
+  pinMode(D1, OUTPUT);
+  pinMode(D2, OUTPUT);
+  digitalWrite(D2, LOW);
+  digitalWrite(D1, LOW);
+  digitalWrite(D2, LOW);
+}
+
+
+
+void on_data_point_found(const char* at, const char* value, int index, void* context, int type) {
+
+
+
+
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(WHITE);
+  display.setCursor(0,0);
+
+  while(value && *value){
+    char c = *value;
+    if(c == '|')
+      display.println();
+    else
+      display.write(c);
+    ++value;
+  }
+
+  /*
+  char str[22];
+  memset(str, 0, 22);
+
+  int pos = 0;
+
+  for(char* ch = (char*)value; ch; ++ch){
+    str[pos] = *ch == '|' ? 0 : *ch;
+    if(!str[pos] || pos == 21){
+      display.println(value);
+      pos = 0;
+      memset(str, 0, 22);
+    } else {
+      ++pos;
+    }
+  }
+  */
+
+
+
+  //display.println(value);
+
+
+  display.display();
+
+  switch(rand() % 3){
+  case 0: led_red(); break;
+  case 1: led_green(); break;
+  case 2: led_yellow(); break;
+  }
+
+
+  //Particle.publish("open_url", "https://local.nixle.com/alert/5871137/");
+  delay(5000);
+}
+
+
+
+
+
+
+
+void iteration()   {
+  // init done
+
+  //display.clearDisplay();   // clears the screen and buffer
+
+
+  int response = m2xClient.listStreamValues(deviceId, streamName, on_data_point_found, NULL);
+
+
+
+}
+
+
+void loop() {
+  iteration();
+}
+
+
+
+void setup() {
+  //Particle.variable("url", url, STRING);
+  Serial.begin(9600);
+
   // by default, we'll generate the high voltage from the 3.3v line internally! (neat!)
   display.begin(SSD1306_SWITCHCAPVCC);
-  // init done
-  
   display.display(); // show splashscreen
-  delay(2000);
-  display.clearDisplay();   // clears the screen and buffer
+  //digitalWrite(D0, HIGH);
+  delay(8000);
+
+
+}
+
+
+void old()
+{
 
   // draw a single pixel
   display.drawPixel(10, 10, WHITE);
@@ -126,7 +306,7 @@ void setup()   {
   testdrawtriangle();
   delay(2000);
   display.clearDisplay();
-   
+
   testfilltriangle();
   delay(2000);
   display.clearDisplay();
@@ -141,7 +321,7 @@ void setup()   {
   testscrolltext();
   delay(2000);
   display.clearDisplay();
-  
+
   // text display tests
   display.setTextSize(1);
   display.setTextColor(WHITE);
@@ -162,29 +342,26 @@ void setup()   {
 
   // invert the display
   display.invertDisplay(true);
-  delay(1000); 
+  delay(1000);
   display.invertDisplay(false);
-  delay(1000); 
+  delay(1000);
 
   // draw a bitmap icon and 'animate' movement
   testdrawbitmap(logo16_glcd_bmp, LOGO16_GLCD_HEIGHT, LOGO16_GLCD_WIDTH);
 }
 
 
-void loop() {
-  
-}
 
 
 void testdrawbitmap(const uint8_t *bitmap, uint8_t w, uint8_t h) {
   uint8_t icons[NUMFLAKES][3];
- 
+
   // initialize
   for (uint8_t f=0; f< NUMFLAKES; f++) {
     icons[f][XPOS] = random(display.width());
     icons[f][YPOS] = 0;
     icons[f][DELTAY] = random(5) + 1;
-    
+
     Serial.print("x: ");
     Serial.print(icons[f][XPOS], DEC);
     Serial.print(" y: ");
@@ -200,7 +377,7 @@ void testdrawbitmap(const uint8_t *bitmap, uint8_t w, uint8_t h) {
     }
     display.display();
     delay(200);
-    
+
     // then erase it + move it
     for (uint8_t f=0; f< NUMFLAKES; f++) {
       display.drawBitmap(icons[f][XPOS], icons[f][YPOS],  logo16_glcd_bmp, w, h, BLACK);
@@ -227,7 +404,7 @@ void testdrawchar(void) {
     display.write(i);
     if ((i > 0) && (i % 21 == 0))
       display.println();
-  }    
+  }
   display.display();
 }
 
@@ -285,7 +462,7 @@ void testfillroundrect(void) {
     display.display();
   }
 }
-   
+
 void testdrawrect(void) {
   for (int16_t i=0; i<display.height()/2; i+=2) {
     display.drawRect(i, i, display.width()-2*i, display.height()-2*i, WHITE);
@@ -293,7 +470,7 @@ void testdrawrect(void) {
   }
 }
 
-void testdrawline() {  
+void testdrawline() {
   for (int16_t i=0; i<display.width(); i+=4) {
     display.drawLine(0, 0, i, display.height()-1, WHITE);
     display.display();
@@ -303,7 +480,7 @@ void testdrawline() {
     display.display();
   }
   delay(250);
-  
+
   display.clearDisplay();
   for (int16_t i=0; i<display.width(); i+=4) {
     display.drawLine(0, display.height()-1, i, 0, WHITE);
@@ -314,7 +491,7 @@ void testdrawline() {
     display.display();
   }
   delay(250);
-  
+
   display.clearDisplay();
   for (int16_t i=display.width()-1; i>=0; i-=4) {
     display.drawLine(display.width()-1, display.height()-1, i, 0, WHITE);
@@ -332,7 +509,7 @@ void testdrawline() {
     display.display();
   }
   for (int16_t i=0; i<display.width(); i+=4) {
-    display.drawLine(display.width()-1, 0, i, display.height()-1, WHITE); 
+    display.drawLine(display.width()-1, 0, i, display.height()-1, WHITE);
     display.display();
   }
   delay(250);
@@ -345,7 +522,7 @@ void testscrolltext(void) {
   display.clearDisplay();
   display.println("scroll");
   display.display();
- 
+
   display.startscrollright(0x00, 0x0F);
   delay(2000);
   display.stopscroll();
@@ -353,7 +530,7 @@ void testscrolltext(void) {
   display.startscrollleft(0x00, 0x0F);
   delay(2000);
   display.stopscroll();
-  delay(1000);    
+  delay(1000);
   display.startscrolldiagright(0x00, 0x07);
   delay(2000);
   display.startscrolldiagleft(0x00, 0x07);
