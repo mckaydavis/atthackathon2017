@@ -1,0 +1,2 @@
+feedparser
+m2x-python
